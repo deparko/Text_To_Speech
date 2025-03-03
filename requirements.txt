@@ -1,0 +1,14 @@
+# Core TTS engines
+TTS>=0.17.0,<0.18.0  # Coqui TTS for local models
+gtts>=2.3.0          # Google Text-to-Speech
+
+# Utilities
+PyYAML>=6.0          # YAML configuration file handling
+pyperclip>=1.8.2     # Clipboard access
+pydub>=0.25.1        # Audio file manipulation (optional for MP3 handling)
+
+# Optional dependencies
+# Uncomment if needed:
+# numpy>=1.22.0      # Required by TTS
+# torch>=1.13.0      # Required by TTS for GPU acceleration
+# soundfile>=0.10.3  # Alternative audio file handling

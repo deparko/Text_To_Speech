@@ -1,0 +1,5 @@
+*.pyc
+tts_env/
+tts_py310_venv/
+*.wav
+*.mp3
