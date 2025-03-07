@@ -6,6 +6,7 @@ gtts>=2.3.0          # Google Text-to-Speech
 PyYAML>=6.0          # YAML configuration file handling
 pyperclip>=1.8.2     # Clipboard access
 pydub>=0.25.1        # Audio file manipulation (optional for MP3 handling)
+Pillow>=11.0.0       # Image handling for podcast cover
 
 # Optional dependencies
 # Uncomment if needed:
