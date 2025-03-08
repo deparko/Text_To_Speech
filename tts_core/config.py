@@ -16,12 +16,22 @@ DEFAULT_CONFIG = {
             "tts_models/en/vctk/fast_pitch",
             "tts_models/en/vctk/vits"
         ],
-        "use_gtts": True
+        "use_gtts": False,  # Use as fallback
+        "use_openai": True  # Default engine
+    },
+    "logging": {
+        "verbose": False,
+        "show_model_config": False
     },
     "gtts": {
         "language": "en",
         "tld": "com",
         "slow": False
+    },
+    "openai": {
+        "voice": "nova",  # Default voice
+        "model": "tts-1",
+        "api_key": ""  # Set via OPENAI_API_KEY environment variable
     },
     "voice": {
         "speed": 1.0,
@@ -33,19 +43,12 @@ DEFAULT_CONFIG = {
         "folder": "~/Library/Mobile Documents/com~apple~CloudDocs/TTS_Audio",
         "play_audio": True,
         "cache_audio": False,
-        "add_to_music": True
-    },
-    "ai": {
-        "api_key": "",
-        "model": "gpt-3.5-turbo",
-        "temperature": 0.3,
-        "max_tokens": 1000,
-        "target_language": "English"
+        "add_to_music": False
     },
     "advanced": {
         "progress_bar": False,
         "gpu": False,
-        "stream": False
+        "cost_tracking": True
     }
 }
 
@@ -57,21 +60,26 @@ class Config:
         Initialize the configuration manager.
         
         Args:
-            config_path (str, optional): Path to the configuration file.
-                If None, will look for tts_config.yaml in the current directory.
+            config_path (str or Path, optional): Path to the configuration file.
+                If None, will look for tts_config.yaml in the script directory.
         """
+        if config_path is None:
+            script_dir = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            config_path = script_dir / 'tts_config.yaml'
+        elif isinstance(config_path, str):
+            config_path = Path(config_path)
+        
         self.config = DEFAULT_CONFIG.copy()
         self.config_path = config_path
         
-        if config_path:
-            self.load_config(config_path)
+        self.load_config(config_path)
     
     def load_config(self, config_path):
         """
         Load configuration from a YAML file.
         
         Args:
-            config_path (str): Path to the configuration file.
+            config_path (Path): Path to the configuration file.
         
         Returns:
             dict: The loaded configuration.
@@ -141,7 +149,7 @@ class Config:
         Save the configuration to a YAML file.
         
         Args:
-            config_path (str, optional): Path to save the configuration file.
+            config_path (str or Path, optional): Path to save the configuration file.
                 If None, uses the path from initialization.
         
         Returns:
@@ -159,4 +167,72 @@ class Config:
             return True
         except Exception as e:
             logging.error(f"Error saving configuration: {e}")
-            return False 
+            return False
+
+def load_config(config_path=None):
+    """Helper function to create a Config instance."""
+    return Config(config_path)
+
+def get_config_path():
+    """Get the path to the configuration file."""
+    # Check current directory first
+    local_config = Path("tts_config.yaml")
+    if local_config.exists():
+        return local_config
+        
+    # Check home directory
+    home_config = Path.home() / ".tts_config.yaml"
+    if home_config.exists():
+        return home_config
+        
+    # Check deployment directory
+    deploy_config = Path.home() / "SoftwareDev/bin/tts/tts_config.yaml"
+    if deploy_config.exists():
+        return deploy_config
+        
+    raise FileNotFoundError("Configuration file not found")
+
+def load_config():
+    """Load configuration from YAML file."""
+    try:
+        config_path = get_config_path()
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+            
+        # Expand user path in output folder
+        if 'output' in config and 'folder' in config['output']:
+            config['output']['folder'] = os.path.expanduser(config['output']['folder'])
+            
+        return config
+    except Exception as e:
+        logging.error(f"Error loading configuration: {e}")
+        raise
+
+def get_engine_config():
+    """Get the TTS engine configuration."""
+    config = load_config()
+    return {
+        'use_gtts': config.get('model', {}).get('use_gtts', True),
+        'use_openai': config.get('model', {}).get('use_openai', False),
+        'model_name': config.get('model', {}).get('name'),
+    }
+
+def get_output_config():
+    """Get the output configuration."""
+    config = load_config()
+    return config.get('output', {})
+
+def get_voice_config():
+    """Get the voice configuration."""
+    config = load_config()
+    return config.get('voice', {})
+
+def get_openai_config():
+    """Get OpenAI-specific configuration."""
+    config = load_config()
+    return config.get('openai', {})
+
+def get_gtts_config():
+    """Get Google TTS-specific configuration."""
+    config = load_config()
+    return config.get('gtts', {}) 

@@ -1,149 +1,148 @@
 """
 Input handling for the Text-to-Speech application.
-This module provides functions for getting text from various sources.
 """
 
 import os
-import pyperclip
-import logging
-import mimetypes
 import re
+import logging
+import pyperclip
+from pathlib import Path
+from typing import Optional
 
 class InputHandler:
-    """Handles different input sources for text."""
+    """Handles text input from various sources."""
     
-    @staticmethod
-    def clean_text(text):
+    def __init__(self):
+        """Initialize the input handler."""
+        self.supported_extensions = {'.txt', '.md', '.rtf', '.doc', '.docx', '.pdf'}
+    
+    def from_clipboard(self) -> str:
         """
-        Clean text by removing problematic characters and normalizing whitespace.
+        Get text from clipboard.
+        
+        Returns:
+            str: The text from clipboard, or empty string if clipboard is empty.
+        """
+        try:
+            text = pyperclip.paste()
+            if not text:
+                logging.warning("Clipboard is empty")
+                return ""
+            return text
+        except Exception as e:
+            logging.error(f"Error reading from clipboard: {e}")
+            return ""
+    
+    def from_file(self, file_path: str) -> str:
+        """
+        Read text from a file.
+        
+        Args:
+            file_path (str): Path to the file to read.
+        
+        Returns:
+            str: The text content of the file, or empty string if file cannot be read.
+        """
+        path = Path(file_path)
+        if not path.exists():
+            logging.error(f"File not found: {file_path}")
+            return ""
+            
+        if path.suffix.lower() not in self.supported_extensions:
+            logging.error(f"Unsupported file type: {path.suffix}")
+            return ""
+            
+        try:
+            # Handle different file types
+            suffix = path.suffix.lower()
+            
+            # Text files (txt, md, rtf)
+            if suffix in {'.txt', '.md', '.rtf'}:
+                with open(path, 'r', encoding='utf-8') as f:
+                    return f.read()
+            
+            # PDF files
+            elif suffix == '.pdf':
+                try:
+                    import PyPDF2
+                    text = []
+                    with open(path, 'rb') as f:
+                        reader = PyPDF2.PdfReader(f)
+                        for page in reader.pages:
+                            text.append(page.extract_text())
+                    return '\n'.join(text)
+                except ImportError:
+                    logging.error("PyPDF2 not installed. Install with: pip install PyPDF2")
+                    return ""
+            
+            # Word documents
+            elif suffix in {'.doc', '.docx'}:
+                try:
+                    from docx import Document
+                    doc = Document(path)
+                    return '\n'.join(paragraph.text for paragraph in doc.paragraphs)
+                except ImportError:
+                    logging.error("python-docx not installed. Install with: pip install python-docx")
+                    return ""
+            
+        except Exception as e:
+            logging.error(f"Error reading file {file_path}: {e}")
+            return ""
+    
+    def clean_text(self, text: str) -> str:
+        """
+        Clean and normalize text for TTS processing.
         
         Args:
             text (str): The text to clean.
-            
+        
         Returns:
             str: The cleaned text.
         """
         if not text:
             return ""
             
-        # Only remove truly problematic characters
-        text = re.sub(r'[\x00-\x1F\x7F]', '', text)
+        # Remove extra whitespace
+        text = re.sub(r'\s+', ' ', text.strip())
         
-        # Normalize whitespace (only multiple spaces/newlines)
-        text = re.sub(r'\s+', ' ', text)
+        # Fix common punctuation issues
+        text = re.sub(r'\.{3,}', '...', text)  # Normalize ellipsis
+        text = re.sub(r'["\']', '"', text)     # Normalize quotes
+        text = re.sub(r'[-‐‑‒–—―]', '-', text) # Normalize hyphens/dashes
         
-        return text.strip()
+        # Add space after punctuation if missing
+        text = re.sub(r'([.!?])([A-Za-z])', r'\1 \2', text)
+        
+        # Remove URLs
+        text = re.sub(r'http[s]?://\S+', '', text)
+        
+        # Remove email addresses
+        text = re.sub(r'\S+@\S+\.\S+', '', text)
+        
+        # Remove special characters
+        text = re.sub(r'[^\w\s.,!?;:"\'-]', ' ', text)
+        
+        # Clean up final result
+        text = re.sub(r'\s+', ' ', text).strip()
+        
+        return text
+
+def get_input_text(text: Optional[str] = None, file_path: Optional[str] = None) -> str:
+    """
+    Get input text from either direct text input or file.
     
-    @staticmethod
-    def from_clipboard():
-        """
-        Get text from the clipboard.
+    Args:
+        text (str, optional): Direct text input
+        file_path (str, optional): Path to input file
         
-        Returns:
-            str: The text from the clipboard, or empty string if clipboard is empty.
-        """
-        try:
-            text = pyperclip.paste().strip()
-            if text:
-                logging.info(f"Got {len(text)} characters from clipboard")
-            else:
-                logging.warning("Clipboard is empty")
-            return text
-        except Exception as e:
-            logging.error(f"Error getting text from clipboard: {e}")
-            return ""
+    Returns:
+        str: The input text
+    """
+    handler = InputHandler()
     
-    @staticmethod
-    def from_file(file_path):
-        """
-        Read text from a file based on its extension.
-        
-        Args:
-            file_path (str): Path to the file to read.
-            
-        Returns:
-            str: The text from the file, or None if the file could not be read.
-        """
-        if not os.path.exists(file_path):
-            logging.error(f"File {file_path} not found")
-            return None
-            
-        # Get file extension and mime type
-        file_ext = os.path.splitext(file_path)[1].lower()
-        mime_type, _ = mimetypes.guess_type(file_path)
-        
-        logging.info(f"Reading file: {file_path} (type: {mime_type or file_ext})")
-        
-        # Handle different file types
-        try:
-            if file_ext == '.txt' or mime_type == 'text/plain':
-                # Simple text file
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    text = f.read()
-                    logging.info(f"Read {len(text)} characters from text file")
-                    return text
-                    
-            elif file_ext == '.pdf':
-                # PDF file
-                try:
-                    import PyPDF2
-                    with open(file_path, 'rb') as f:
-                        reader = PyPDF2.PdfReader(f)
-                        text = ""
-                        for page in reader.pages:
-                            text += page.extract_text() + "\n"
-                        logging.info(f"Read {len(text)} characters from PDF file ({len(reader.pages)} pages)")
-                        return text
-                except ImportError:
-                    logging.error("PyPDF2 module not found. Please install it with: pip install PyPDF2")
-                    return None
-                    
-            elif file_ext in ['.docx', '.doc']:
-                # Word document
-                try:
-                    import docx
-                    doc = docx.Document(file_path)
-                    text = "\n".join([para.text for para in doc.paragraphs])
-                    logging.info(f"Read {len(text)} characters from Word document ({len(doc.paragraphs)} paragraphs)")
-                    return text
-                except ImportError:
-                    logging.error("python-docx module not found. Please install it with: pip install python-docx")
-                    return None
-                    
-            else:
-                logging.error(f"Unsupported file format: {file_ext}")
-                logging.info("Supported formats: .txt, .pdf, .docx, .doc")
-                return None
-                
-        except Exception as e:
-            logging.error(f"Error reading file {file_path}: {e}")
-            return None
-    
-    @staticmethod
-    def get_text(file_path=None, text=None):
-        """
-        Get text from the specified source.
-        
-        Args:
-            file_path (str, optional): Path to a file to read.
-            text (str, optional): Direct text input.
-            
-        Returns:
-            str: The text from the specified source, or None if no text could be obtained.
-        """
-        # Priority: direct text > file > clipboard
-        if text:
-            logging.info(f"Using provided text ({len(text)} characters)")
-            return InputHandler.clean_text(text)
-            
-        if file_path:
-            text = InputHandler.from_file(file_path)
-            if text:
-                return InputHandler.clean_text(text)
-            
-        clipboard_text = InputHandler.from_clipboard()
-        if clipboard_text:
-            return InputHandler.clean_text(clipboard_text)
-            
-        logging.error("No text provided, file is empty, or clipboard is empty")
-        return None 
+    if text:
+        return handler.clean_text(text)
+    elif file_path:
+        return handler.clean_text(handler.from_file(file_path))
+    else:
+        return handler.clean_text(handler.from_clipboard()) 
