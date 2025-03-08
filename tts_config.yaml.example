@@ -1,0 +1,44 @@
+# Text-to-Speech Configuration
+
+model:
+  name: "tts_models/en/ljspeech/tacotron2-DDC"  # Default TTS model
+  alternatives:
+    - "tts_models/en/ljspeech/fast_pitch"       # Faster model
+    - "tts_models/en/vctk/fast_pitch"           # Multi-speaker fast model
+    - "tts_models/en/vctk/vits"                 # Multi-speaker high quality
+  use_gtts: false                               # Use Google TTS by default
+  use_openai: true                              # OpenAI TTS enabled by default
+
+gtts:
+  language: "en"                                # Language code (e.g., en, fr, de, etc.)
+  tld: "com"                                    # Top-level domain for the Google server
+  slow: false                                   # Slower, more deliberate speech
+
+openai:
+  voice: "nova"                                 # Default voice (options below)
+  model: "tts-1"                               # TTS model to use
+  api_key: "your-api-key-here"                 # Set your OpenAI API key here or via env var
+
+# Available OpenAI voices:
+# - alloy: Neutral and balanced
+# - echo: Male, warm and clear
+# - fable: Male, British accent
+# - onyx: Male, deep and authoritative
+# - nova: Female, warm and natural
+# - shimmer: Female, clear and expressive
+
+voice:
+  speed: 1.0                                    # Speech speed multiplier
+  speaker_id: null                              # Speaker ID for multi-speaker models
+  pitch: null                                   # Voice pitch adjustment
+  sample_rate: 22050                            # Audio sample rate
+
+output:
+  directory: "~/Library/Mobile Documents/com~apple~CloudDocs/TTS_Audio"
+  play_audio: true                              # Whether to play audio after generation
+  cache_audio: false                            # Whether to cache generated audio
+  add_to_music: false                          # Whether to add to Music library
+
+advanced:
+  progress_bar: false                           # Show progress bar during generation
+  gpu: false                                    # Use GPU for TTS processing 
