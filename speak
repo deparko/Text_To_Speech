@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Store the current directory
+CURRENT_DIR="$(pwd)"
+
+# Get the script directory
+SCRIPT_DIR="$(dirname "$0")"
+
+# Activate virtual environment if it exists
+if [ -d "$SCRIPT_DIR/.venv_tts310" ]; then
+    source "$SCRIPT_DIR/.venv_tts310/bin/activate"
+fi
+
+# Add the script directory to PYTHONPATH
+export PYTHONPATH="$SCRIPT_DIR:$PYTHONPATH"
+
+# Run the script with all arguments passed to this command
+python "$SCRIPT_DIR/text_to_speech.py" "$@"
+
+# Deactivate virtual environment if it was activated
+if [ -n "$VIRTUAL_ENV" ]; then
+    deactivate
+fi 

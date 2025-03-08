@@ -1,15 +1,30 @@
 # Core TTS engines
-TTS>=0.17.0,<0.18.0  # Coqui TTS for local models
-gtts>=2.3.0          # Google Text-to-Speech
+gTTS>=2.5.0          # Google Text-to-Speech
+openai>=1.65.0       # OpenAI TTS API
 
-# Utilities
-PyYAML>=6.0          # YAML configuration file handling
-pyperclip>=1.8.2     # Clipboard access
-pydub>=0.25.1        # Audio file manipulation (optional for MP3 handling)
-Pillow>=11.0.0       # Image handling for podcast cover
+# Core utilities
+pyperclip>=1.8.2     # Clipboard handling
+PyYAML>=6.0.1        # Configuration file handling
+pydub>=0.25.1        # Audio file manipulation (required for long text handling)
 
-# Optional dependencies
-# Uncomment if needed:
-# numpy>=1.22.0      # Required by TTS
-# torch>=1.13.0      # Required by TTS for GPU acceleration
-# soundfile>=0.10.3  # Alternative audio file handling
+# File format support
+python-docx>=1.0.0   # Word document support
+PyPDF2>=3.0.0        # PDF file support
+
+# Audio playback and handling
+playsound>=1.3.0     # Cross-platform audio playback
+
+# Development tools
+black>=24.0.0        # Code formatting
+pylint>=3.0.0        # Code linting
+pytest>=8.0.0        # Testing
+
+# Optional utilities
+Pillow>=11.0.0       # Image handling for podcast cover art
+
+# System requirements:
+# - Python 3.10 or higher
+# - ffmpeg (for audio manipulation, install via system package manager)
+#   macOS: brew install ffmpeg
+#   Linux: apt-get install ffmpeg
+#   Windows: download from https://ffmpeg.org/download.html
