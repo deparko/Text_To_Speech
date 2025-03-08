@@ -1,165 +1,172 @@
-# Text-to-Speech Clipboard Utility
+# Text-to-Speech Utility
 
-A command-line utility that converts text to speech using various TTS engines, with support for multiple input sources and iCloud Drive sync.
+A powerful text-to-speech conversion utility that supports multiple TTS engines and provides rich output formats.
 
 ## Features
 
-- Multiple input sources:
-  - Clipboard text
-  - Direct text input
-  - File input (TXT, PDF, DOCX)
-- Supports multiple TTS engines:
-  - Local models via Coqui TTS (default: tacotron2-DDC)
-  - Google Text-to-Speech (gTTS) as default
-- Configurable via YAML file or command-line arguments
-- Audio caching for improved performance (optional)
-- Customizable voice parameters (speed, pitch, speaker)
-- Cross-platform audio playback
-- Clean, minimal console output with detailed logging
-- macOS deployment support with keyboard shortcuts
-- Text cleaning and preprocessing
-- Modular architecture for easy maintenance and extension
-- iCloud Drive integration:
-  - Automatic sync across Apple devices
-  - Organized file storage
-  - Easy access via Files app
+- Multiple TTS engine support:
+  - OpenAI TTS (default)
+  - Google Text-to-Speech (gTTS)
+  - More engines planned
+
+- Rich output formats:
+  - MP3 audio files
+  - Interactive HTML viewer with synchronized text
+  - Markdown files with metadata and timestamps
+  - SRT subtitle files for video integration
+
+- Advanced text processing:
+  - Smart text segmentation
+  - Quote detection and formatting
+  - Automatic timing calculation
+  - Support for various input formats (clipboard, file, command line)
+
+- Enhanced playback features:
+  - Interactive HTML player with progress tracking
+  - Synchronized text highlighting
+  - Click-to-seek functionality
+  - Table of contents navigation
 
 ## Installation
 
-1. Create a Python virtual environment:
+1. Clone the repository:
    ```bash
-   python3.10 -m venv .venv_tts310
-   source .venv_tts310/bin/activate  # On Windows: .venv_tts310\Scripts\activate
+   git clone <repository-url>
+   cd Text_To_Speech
    ```
 
-2. Install required packages:
+2. Create and activate a Python virtual environment (Python 3.10+ required):
+   ```bash
+   python -m venv .venv_tts310
+   source .venv_tts310/bin/activate  # On Unix/macOS
+   # or
+   .venv_tts310\Scripts\activate  # On Windows
+   ```
+
+3. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Configure the YAML file (see Configuration section)
+4. Install system dependencies:
+   - For audio manipulation: `ffmpeg`
+     ```bash
+     # On macOS with Homebrew
+     brew install ffmpeg
+     
+     # On Ubuntu/Debian
+     sudo apt-get install ffmpeg
+     
+     # On Windows
+     # Download from https://ffmpeg.org/download.html
+     ```
+
+5. Configure your API keys:
+   - Copy `tts_config.yaml.example` to `tts_config.yaml`
+   - Add your OpenAI API key if using OpenAI TTS
 
 ## Usage
 
-Basic usage:
-```bash
-# Convert clipboard text to speech
-speak
+### Basic Usage
 
-# Convert specific text to speech
-speak --text "Your text here"
+1. From clipboard:
+   ```bash
+   ./speak
+   ```
 
-# Convert text from a file
-speak --file "path/to/your/file.txt"
+2. From command line:
+   ```bash
+   ./speak --text "Text to convert to speech"
+   ```
 
-# Use Google TTS (default)
-speak --text "Your text here"
+3. From file:
+   ```bash
+   ./speak --file input.txt
+   ```
 
-# Use Coqui TTS instead
-speak --text "Your text here" --use-coqui
+### Command Line Options
 
-# Adjust speech speed
-speak --text "Your text here" --speed 1.2
+- `--text TEXT`: Text to convert to speech
+- `--file FILE`: Input file containing text
+- `--voice VOICE`: OpenAI voice to use (nova, alloy, echo, fable, onyx, shimmer)
+- `--use-gtts`: Use Google TTS instead of OpenAI
+- `--speed SPEED`: Speech speed multiplier
+- `--no-play`: Don't play audio after generation
+- `--list-voices`: List available voices/models
 
-# Save without playing
-speak --text "Your text here" --no-play
+### Output Files
 
-# List available voices
-speak --list-voices
-```
+For each conversion, the following files are generated in your configured output directory:
+
+1. Audio File (`tts_YYYYMMDD_HHMMSS.mp3`):
+   - High-quality audio output
+   - Compatible with most media players
+
+2. HTML Viewer (`tts_YYYYMMDD_HHMMSS.html`):
+   - Interactive audio player
+   - Synchronized text display
+   - Navigation features
+   - Metadata display
+
+3. Markdown File (`tts_YYYYMMDD_HHMMSS.md`):
+   - Text content with metadata
+   - Table of contents
+   - Timestamps
+   - Formatted quotes
+
+4. SRT Subtitle File (`tts_YYYYMMDD_HHMMSS.srt`):
+   - Standard subtitle format
+   - Compatible with video players
+   - Timing information
+
+### HTML Viewer Features
+
+The HTML viewer provides an enhanced playback experience:
+
+- Sticky audio player that stays visible while scrolling
+- Progress bar showing current position
+- Table of contents with clickable timestamps
+- Auto-scrolling to current segment
+- Quote highlighting
+- Metadata display (duration, word count, etc.)
+- Click-to-seek functionality
 
 ## Configuration
 
-The script can be configured via `tts_config.yaml`:
+The `tts_config.yaml` file allows you to configure:
 
-```yaml
-model:
-  name: "tts_models/en/ljspeech/tacotron2-DDC"  # Default TTS model
-  alternatives:
-    - "tts_models/en/ljspeech/fast_pitch"       # Faster model
-    - "tts_models/en/vctk/fast_pitch"           # Multi-speaker fast model
-    - "tts_models/en/vctk/vits"                 # Multi-speaker high quality
-  use_gtts: true                                # Use Google TTS by default
+- API keys and engine selection
+- Output directory and format
+- Audio caching settings
+- Playback preferences
+- Voice and speed settings
 
-gtts:
-  language: "en"                                # Language code (e.g., en, fr, de, etc.)
-  tld: "com"                                    # Top-level domain for the Google server
-  slow: false                                   # Slower, more deliberate speech
+## Development
 
-voice:
-  speed: 1.0                                    # Speech speed multiplier
-  speaker_id: null                              # Speaker ID for multi-speaker models
-  pitch: null                                   # Voice pitch adjustment
-  sample_rate: 22050                            # Audio sample rate
+- Python 3.10 or higher required
+- Uses `black` for code formatting
+- Uses `pylint` for code quality
+- Uses `pytest` for testing
 
-output:
-  folder: "~/Library/Mobile Documents/com~apple~CloudDocs/TTS_Audio"
-  play_audio: true                              # Whether to play audio after generation
-  cache_audio: false                            # Whether to cache generated audio
+## Contributing
 
-advanced:
-  progress_bar: false                           # Show progress bar during generation
-  gpu: false                                    # Use GPU for TTS processing
-```
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests: `pytest`
+5. Submit a pull request
 
-## Project Structure
+## License
 
-```
-Text_To_Speech/
-├── tts_core/                   # Core functionality modules
-│   ├── __init__.py
-│   ├── config.py              # Configuration management
-│   ├── input_handler.py       # Text input handling
-│   ├── output_handler.py      # Audio output handling
-│   └── utils.py              # Utility functions
-├── text_to_speech.py         # Main script
-├── tts_config.yaml           # Configuration file
-└── requirements.txt          # Python dependencies
-```
+[Your license information here]
 
-## macOS Deployment
+## Acknowledgments
 
-1. Create the bin directory:
-   ```bash
-   mkdir -p ~/SoftwareDev/bin/tts
-   ```
+- OpenAI for their TTS API
+- Google for gTTS
+- All contributors and users
 
-2. Copy the script and config:
-   ```bash
-   cp -r text_to_speech.py tts_core tts_config.yaml requirements.txt ~/SoftwareDev/bin/tts/
-   ```
-
-3. Set up virtual environment:
-   ```bash
-   cd ~/SoftwareDev/bin/tts
-   python3.10 -m venv .venv_tts310
-   source .venv_tts310/bin/activate
-   pip install -r requirements.txt
-   ```
-
-4. Create wrapper script:
-   ```bash
-   echo '#!/bin/bash
-   source ~/SoftwareDev/bin/tts/.venv_tts310/bin/activate
-   cd ~/SoftwareDev/bin/tts
-   python text_to_speech.py "$@"' > ~/SoftwareDev/bin/tts/speak
-   chmod +x ~/SoftwareDev/bin/tts/speak
-   ```
-
-5. Add to PATH:
-   ```bash
-   echo 'export PATH="$HOME/SoftwareDev/bin/tts:$PATH"' >> ~/.zshrc
-   source ~/.zshrc
-   ```
-
-## File Storage
-
-Audio files are stored in iCloud Drive for easy access across devices:
-- Location: `~/Library/Mobile Documents/com~apple~CloudDocs/TTS_Audio`
-- Files are named with timestamps (e.g., `tts_20250306_213448.mp3`)
-- Access via Files app on iOS/iPadOS devices
-- Automatic sync across all Apple devices
-
-## Future Development
-
-For planned enhancements and improvements, see [ENHANCEMENTS.md](ENHANCEMENTS.md).
+For more information, see:
+- [ENHANCEMENTS.md](ENHANCEMENTS.md) for planned features
+- [KNOWN_ISSUES.md](KNOWN_ISSUES.md) for current limitations
+- [SOFTWARE_PRINCIPLES.md](SOFTWARE_PRINCIPLES.md) for development guidelines
