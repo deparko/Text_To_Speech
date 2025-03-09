@@ -243,12 +243,18 @@ class OpenAITTSEngine:
             
             if len(chunks) == 1:
                 # Single chunk, direct conversion
-                response = openai.audio.speech.create(
-                    model=self.model,
-                    voice=self.voice,
-                    input=chunks[0]
-                )
-                return response.content
+                try:
+                    logging.info(f"Sending single chunk to OpenAI TTS API: '{chunks[0][:50]}...' ({len(chunks[0])} chars)")
+                    response = openai.audio.speech.create(
+                        model=self.model,
+                        voice=self.voice,
+                        input=chunks[0]
+                    )
+                    logging.info("Successfully processed single chunk")
+                    return response.content
+                except Exception as e:
+                    logging.error(f"Error processing single chunk: {e}")
+                    return None
             
             # Multiple chunks, need to combine audio
             audio_segments = []
@@ -257,6 +263,7 @@ class OpenAITTSEngine:
             for i, chunk in enumerate(chunks):
                 try:
                     logging.info(f"Processing chunk {i+1} of {total_chunks} ({len(chunk)} characters)")
+                    logging.info(f"Sending chunk to OpenAI TTS API: '{chunk[:50]}...' ({len(chunk)} chars)")
                     response = openai.audio.speech.create(
                         model=self.model,
                         voice=self.voice,
@@ -274,12 +281,14 @@ class OpenAITTSEngine:
                         audio_segments[-1] = combined
                     else:
                         audio_segments.append(segment)
-                        
+                    
+                    logging.info(f"Successfully processed chunk {i+1}")
                 except Exception as chunk_error:
                     logging.error(f"Error processing chunk {i+1}: {chunk_error}")
                     # Continue with next chunk instead of failing completely
                     continue
             
+            # Check if we have any audio segments
             if not audio_segments:
                 logging.error("No audio segments were successfully generated")
                 return None

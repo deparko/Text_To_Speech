@@ -3,188 +3,316 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TTS Audio Player</title>
+    <title>Audio Transcript Viewer</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: Arial, sans-serif;
             line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
+            margin: 0;
             padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
             color: #333;
         }
         
-        .metadata {
-            background: #f5f5f5;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+        h1, h2, h3 {
+            color: #2c3e50;
         }
         
-        .player-container {
+        .sticky-player {
             position: sticky;
             top: 0;
-            background: white;
+            background: #fff;
             padding: 10px 0;
             border-bottom: 1px solid #eee;
             z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
         }
         
         audio {
             width: 100%;
-            margin: 10px 0;
+            max-width: 800px;
+        }
+        
+        .metadata {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .metadata p {
+            margin: 5px 0;
         }
         
         .toc {
-            margin: 20px 0;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin-bottom: 5px;
+        }
+        
+        .toc a {
+            text-decoration: none;
+            color: #3498db;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
         }
         
         .segment {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 8px;
-            transition: background-color 0.3s;
-        }
-        
-        .segment:hover {
-            background-color: #f0f0f0;
-        }
-        
-        .segment.active {
-            background-color: #e3f2fd;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
         }
         
         .timestamp {
-            color: #666;
-            font-size: 0.9em;
+            color: #7f8c8d;
+            font-weight: bold;
             cursor: pointer;
         }
         
         .timestamp:hover {
-            color: #2196F3;
+            color: #3498db;
         }
         
         blockquote {
-            border-left: 4px solid #2196F3;
-            margin: 0;
-            padding-left: 20px;
-            color: #555;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-left: 0;
+            color: #34495e;
+            font-style: italic;
         }
         
-        .progress-bar {
-            height: 4px;
-            background: #e0e0e0;
-            width: 100%;
-            overflow: hidden;
+        .current-segment {
+            background-color: #e8f4fc;
+            border-radius: 5px;
+            padding: 5px;
         }
         
-        .progress {
-            height: 100%;
-            background: #2196F3;
-            width: 0%;
-            transition: width 0.1s;
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        
+        .tab.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 0 0 5px 5px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .ai-processed {
+            background-color: #f0fff0;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .ai-prompt-info {
+            font-style: italic;
+            color: #666;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="player-container">
-        <audio id="audio-player" controls>
-            <source src="" type="audio/mpeg">
+    <div class="sticky-player">
+        <h1>Audio Transcript</h1>
+        <audio controls id="audio-player" src="{{audio_file}}">
             Your browser does not support the audio element.
         </audio>
-        <div class="progress-bar">
-            <div class="progress" id="progress"></div>
+    </div>
+    
+    <div class="metadata">
+        <h2>Metadata</h2>
+        <p><strong>Duration:</strong> {{metadata.duration}}</p>
+        <p><strong>Word Count:</strong> {{metadata.wordCount}}</p>
+        <p><strong>Reading Time:</strong> {{metadata.readingTime}} minutes</p>
+        {% if metadata.promptName %}
+        <p><strong>AI Prompt Used:</strong> {{metadata.promptName}}</p>
+        {% endif %}
+    </div>
+    
+    {% if metadata.processedText and metadata.processedText != metadata.originalText %}
+    <div class="tabs">
+        <div class="tab active" data-tab="transcript">Transcript</div>
+        <div class="tab" data-tab="original">Original Text</div>
+        <div class="tab" data-tab="processed">Processed Text</div>
+    </div>
+    
+    <div class="tab-content active" id="transcript-tab">
+        <div class="toc">
+            <h2>Table of Contents</h2>
+            <ul>
+                {% for segment in segments %}
+                <li><a href="#segment-{{loop.index}}" class="toc-link" data-time="{{segment.start}}">{{segment.timestamp}} - {{segment.preview}}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <h2>Transcript with Timestamps</h2>
+        {% for segment in segments %}
+        <div class="segment" id="segment-{{loop.index}}">
+            <span class="timestamp" data-time="{{segment.start}}">[{{segment.timestamp}}]</span>
+            {% if segment.is_quote %}
+            <blockquote>{{segment.text}}</blockquote>
+            {% else %}
+            <p>{{segment.text}}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="tab-content" id="original-tab">
+        <h2>Original Text</h2>
+        <div class="original-text">
+            <p>{{metadata.originalText}}</p>
         </div>
     </div>
     
-    <div id="content">
-        <!-- Content will be injected here -->
+    <div class="tab-content" id="processed-tab">
+        <h2>Processed Text</h2>
+        <div class="ai-prompt-info">
+            Processed with AI prompt: {{metadata.promptName}}
+        </div>
+        <div class="ai-processed">
+            <p>{{metadata.processedText}}</p>
+        </div>
     </div>
-
+    {% else %}
+    <div class="toc">
+        <h2>Table of Contents</h2>
+        <ul>
+            {% for segment in segments %}
+            <li><a href="#segment-{{loop.index}}" class="toc-link" data-time="{{segment.start}}">{{segment.timestamp}} - {{segment.preview}}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    
+    <h2>Transcript with Timestamps</h2>
+    {% for segment in segments %}
+    <div class="segment" id="segment-{{loop.index}}">
+        <span class="timestamp" data-time="{{segment.start}}">[{{segment.timestamp}}]</span>
+        {% if segment.is_quote %}
+        <blockquote>{{segment.text}}</blockquote>
+        {% else %}
+        <p>{{segment.text}}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% endif %}
+    
     <script>
-        // Will be replaced with actual data
-        const audioData = {
-            metadata: {},
-            segments: []
-        };
-        
         document.addEventListener('DOMContentLoaded', function() {
-            const player = document.getElementById('audio-player');
-            const progress = document.getElementById('progress');
-            const content = document.getElementById('content');
+            const audioPlayer = document.getElementById('audio-player');
+            const timestamps = document.querySelectorAll('.timestamp');
+            const segments = document.querySelectorAll('.segment');
+            const tocLinks = document.querySelectorAll('.toc-link');
             
-            // Set audio source
-            player.src = audioData.metadata.audioFile;
-            
-            // Render content
-            function renderContent() {
-                let html = `
-                    <h1>Text to Speech Output</h1>
-                    <div class="metadata">
-                        <h2>Metadata</h2>
-                        <p><strong>Generated:</strong> ${audioData.metadata.generated}</p>
-                        <p><strong>Voice:</strong> ${audioData.metadata.voice}</p>
-                        <p><strong>Duration:</strong> ${audioData.metadata.duration}</p>
-                        <p><strong>Word Count:</strong> ${audioData.metadata.wordCount}</p>
-                        <p><strong>Reading Time:</strong> ${audioData.metadata.readingTime}</p>
-                    </div>
-                    
-                    <div class="toc">
-                        <h2>Table of Contents</h2>
-                        ${audioData.segments.map((segment, i) => `
-                            <p><span class="timestamp" data-time="${segment.startTime}">[${segment.timestamp}]</span> ${segment.preview}</p>
-                        `).join('')}
-                    </div>
-                    
-                    <div class="segments">
-                        <h2>Content</h2>
-                        ${audioData.segments.map((segment, i) => `
-                            <div class="segment" id="segment-${i}" data-start="${segment.startTime}" data-end="${segment.endTime}">
-                                <span class="timestamp" data-time="${segment.startTime}">[${segment.timestamp}]</span>
-                                ${segment.isQuote ? `<blockquote>${segment.text}</blockquote>` : `<p>${segment.text}</p>`}
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-                content.innerHTML = html;
-                
-                // Add click handlers for timestamps
-                document.querySelectorAll('.timestamp').forEach(timestamp => {
-                    timestamp.addEventListener('click', function() {
-                        const time = parseFloat(this.dataset.time);
-                        player.currentTime = time;
-                        player.play();
-                    });
+            // Click on timestamp to seek
+            timestamps.forEach(timestamp => {
+                timestamp.addEventListener('click', function() {
+                    const time = parseFloat(this.getAttribute('data-time'));
+                    audioPlayer.currentTime = time;
+                    audioPlayer.play();
                 });
-            }
+            });
             
-            // Update active segment based on current time
-            player.addEventListener('timeupdate', function() {
-                const currentTime = player.currentTime;
-                const progress = (currentTime / player.duration) * 100;
-                document.getElementById('progress').style.width = `${progress}%`;
-                
-                // Update active segment
-                document.querySelectorAll('.segment').forEach(segment => {
-                    const start = parseFloat(segment.dataset.start);
-                    const end = parseFloat(segment.dataset.end);
+            // Click on TOC link to seek
+            tocLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const time = parseFloat(this.getAttribute('data-time'));
+                    audioPlayer.currentTime = time;
+                    audioPlayer.play();
                     
-                    if (currentTime >= start && currentTime < end) {
-                        segment.classList.add('active');
-                        // Scroll into view if not visible
+                    // Scroll to segment
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    targetElement.scrollIntoView({ behavior: 'smooth' });
+                });
+            });
+            
+            // Highlight current segment during playback
+            audioPlayer.addEventListener('timeupdate', function() {
+                const currentTime = audioPlayer.currentTime;
+                
+                segments.forEach((segment, index) => {
+                    const timestamp = segment.querySelector('.timestamp');
+                    const startTime = parseFloat(timestamp.getAttribute('data-time'));
+                    const nextSegment = segments[index + 1];
+                    const endTime = nextSegment 
+                        ? parseFloat(nextSegment.querySelector('.timestamp').getAttribute('data-time')) 
+                        : audioPlayer.duration;
+                    
+                    if (currentTime >= startTime && currentTime < endTime) {
+                        segment.classList.add('current-segment');
+                        
+                        // Auto-scroll if not in view
                         const rect = segment.getBoundingClientRect();
-                        const isVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
-                        if (!isVisible) {
+                        const isInView = (
+                            rect.top >= 0 &&
+                            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
+                        );
+                        
+                        if (!isInView) {
                             segment.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }
                     } else {
-                        segment.classList.remove('active');
+                        segment.classList.remove('current-segment');
                     }
                 });
             });
             
-            // Initial render
-            renderContent();
+            // Tab functionality
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Remove active class from all tabs and contents
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding content
+                    this.classList.add('active');
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                });
+            });
         });
     </script>
 </body>

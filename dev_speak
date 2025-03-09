@@ -1,5 +1,5 @@
 #!/bin/bash
-# Wrapper script for text_to_speech.py
+# Development wrapper script for text_to_speech.py
 # Activates the virtual environment and runs the script with the provided arguments
 
 # Get the directory of this script
@@ -12,4 +12,4 @@ source "${SCRIPT_DIR}/.venv/bin/activate"
 python "${SCRIPT_DIR}/text_to_speech.py" "$@"
 
 # Deactivate the virtual environment
-deactivate 
+deactivate

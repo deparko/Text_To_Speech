@@ -69,6 +69,12 @@
    - No volume normalization
    - No audio effects or post-processing
 
+4. **Command Line Interface**
+   - Double quotes in command arguments may cause issues with shell interpretation
+   - Using `speak --text "Hello World!"` may result in a `dquote>` prompt in some shells
+   - Workaround: Always use single quotes for text arguments: `speak --text 'Hello World!'`
+   - This issue affects both the development and production environments
+
 ## Development
 
 1. **Testing**
@@ -126,6 +132,13 @@ If you encounter any issues not listed here, please:
 - [ ] Add error handling for failed chunk processing
 - [ ] Make chunk size configurable in tts_config.yaml
 - [ ] Add progress tracking for multi-chunk processing
+
+### Command Line Interface (Medium Priority)
+- [ ] Fix issue with double quotes in command arguments
+- [ ] Investigate why `speak --text "Hello World!"` results in a `dquote>` prompt
+- [ ] Consider creating a wrapper function that handles quote escaping
+- [ ] Add better error messages when quote-related issues occur
+- [ ] Document the issue and workaround in all relevant documentation
 
 ### Coqui TTS Integration (High Priority)
 - [ ] Implement proper model download and caching

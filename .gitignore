@@ -63,3 +63,9 @@ tts_config.yaml
 local_tests/
 temp/
 scratch/
+
+# External repositories
+AI-Text-Processor/
+
+# Test results
+tests/*_results.md
