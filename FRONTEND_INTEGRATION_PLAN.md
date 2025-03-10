@@ -201,24 +201,30 @@ This integration project is considered **medium to large** in scope due to:
 ### Key Questions to Address
 
 1. **Authentication Requirements**
-   - Will the application require user authentication?
-   - How will API keys for TTS providers be securely managed?
+   - No user authentication required for MVP V1
+   - System will be designed to easily add authentication in future versions
+   - API keys for TTS providers will be managed through environment variables
 
 2. **Deployment Environment**
-   - Will the application be deployed as a web service or desktop application?
-   - What are the hosting requirements and constraints?
+   - The application will be deployed as a web service via Docker
+   - Users will access the application through a web browser
+   - The CLI interface (speak command) will be preserved and enhanced
 
 3. **Performance Considerations**
-   - How will large audio files be handled?
-   - What are the expected response times for TTS processing?
+   - Large audio files will be handled through batch processing
+   - Option to submit jobs without waiting for completion
+   - Notification system for completed batch jobs
+   - Configurable limits for file sizes and processing time
 
 4. **Scalability**
-   - How many concurrent users should the system support?
-   - Will there be limits on file sizes or processing time?
+   - Initial design will focus on single-user deployment
+   - Architecture will support future multi-tenancy with minimal refactoring
+   - Resource isolation between components for easier scaling
 
 5. **Security**
-   - How will user data and uploaded files be secured?
-   - What measures are needed to protect API keys?
+   - Environment variables for API key management
+   - Secure file storage with appropriate permissions
+   - Input validation and sanitization
 
 ### Technical Requirements
 
@@ -289,7 +295,87 @@ The application will transition from generating individual HTML viewers for each
 
 This simplified approach will provide the core multi-instance functionality while keeping the implementation straightforward. Additional features like comparative analysis, advanced filtering, and batch operations can be added in future iterations.
 
-## 7. Next Steps and Action Items
+## 7. Docker Deployment Strategy
+
+The application will be containerized using Docker to provide a consistent, easy-to-deploy solution that works across different environments.
+
+1. **Container Architecture**
+   - **Frontend Container**: Serves the React application
+   - **Backend Container**: Runs the Python API server
+   - **Docker Compose**: Orchestrates the containers and their connections
+
+2. **Deployment Process**
+   - Users download the Docker Compose configuration
+   - Set required environment variables (API keys, etc.)
+   - Run a single command to start the application
+   - Access the web interface via browser at http://localhost:3000 (or configured port)
+
+3. **Environment Configuration**
+   - Environment variables for API keys and configuration
+   - Volume mapping for persistent storage of audio files
+   - Port mapping for web access
+
+4. **Development Workflow**
+   - Local development environment with hot reloading
+   - Containerized testing environment
+   - CI/CD pipeline for automated builds
+
+5. **Future Multi-Tenancy Considerations**
+   - Container isolation for each tenant
+   - Shared resources with access controls
+   - Database integration for user management
+   - API gateway for request routing
+
+## 8. CLI Interface Preservation
+
+The existing command-line interface (speak command) will be preserved and enhanced to work alongside the new web interface.
+
+1. **CLI Integration**
+   - Maintain all existing CLI functionality
+   - Add options to interact with the web service
+   - Ensure backward compatibility
+
+2. **Enhanced CLI Features**
+   - Submit jobs to the web service
+   - Check job status
+   - Download completed files
+   - Configure web service settings
+
+3. **Implementation Approach**
+   - Extend current CLI to communicate with API endpoints
+   - Add new commands for web service interaction
+   - Maintain standalone functionality for offline use
+
+4. **Documentation**
+   - Clear instructions for both CLI and web interface
+   - Examples of common workflows
+   - Migration guide for existing users
+
+## 9. Batch Processing for Large Files
+
+To handle large audio files efficiently, the system will implement batch processing capabilities:
+
+1. **Job Submission**
+   - Submit text-to-speech jobs without waiting for completion
+   - Option to specify "no-wait" or "background" processing
+   - Job queuing system for managing multiple requests
+
+2. **Status Tracking**
+   - Unique job IDs for tracking
+   - Status endpoint for checking job progress
+   - Optional email or browser notifications upon completion
+
+3. **Resource Management**
+   - Configurable limits for concurrent processing
+   - Priority queue for different job types
+   - Resource allocation based on file size and complexity
+
+4. **User Interface**
+   - Job management dashboard in the web interface
+   - Progress indicators for ongoing jobs
+   - History of completed jobs with results
+
+## 10. Next Steps and Action Items
 
 1. **Immediate Actions**
    - Set up development environment for API development
@@ -311,7 +397,7 @@ This simplified approach will provide the core multi-instance functionality whil
    - Update user documentation to include front-end features
    - Prepare deployment guide
 
-## 8. Appendix
+## 11. Appendix
 
 ### A. Front-End Component Structure
 
@@ -365,8 +451,37 @@ tts-application/
 - **Storage**: File system, optional database for metadata
 - **Deployment**: Docker, nginx
 
+### D. Docker Compose Example
+
+```yaml
+version: '3'
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=http://backend:8000
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OUTPUT_DIR=/app/data/output
+    volumes:
+      - tts_data:/app/data
+
+volumes:
+  tts_data:
+```
+
 ---
 
-*Document Version: 1.1*  
+*Document Version: 1.2*  
 *Last Updated: March 10, 2024*  
 *Author: Marco*
