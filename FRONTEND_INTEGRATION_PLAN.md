@@ -266,33 +266,28 @@ The existing AI Text Processor can be leveraged in the front-end to provide enha
 
 ## 6. Multi-Instance Viewer Requirements
 
-The application will transition from generating individual HTML viewers for each audio file to a single, integrated multi-instance viewer within the main UI. This enhancement will provide the following capabilities:
+The application will transition from generating individual HTML viewers for each audio file to a single, integrated multi-instance viewer within the main UI. For the MVP (Version 1), we will focus on essential functionality:
 
-1. **Unified File Management**
-   - Display all generated audio files in a single interface
-   - Sort and filter files by various metadata (date, duration, voice, etc.)
-   - Batch operations for multiple files (delete, download, etc.)
+1. **Basic File Management**
+   - Display a simple list of generated audio files
+   - Basic sorting by date (newest first)
+   - Select a file to view and play
 
-2. **Seamless File Switching**
-   - Switch between different audio files without leaving the viewer
-   - Maintain playback state when switching between files
-   - Queue multiple files for sequential playback
+2. **Simple File Playback**
+   - Play one file at a time
+   - Display transcript for the selected file
+   - Basic audio controls (play, pause, seek)
 
-3. **Comparative Analysis**
-   - Side-by-side comparison of different TTS outputs for the same text
-   - Compare metadata and generation parameters across files
-   - Track differences in processing options
+3. **Minimal Navigation**
+   - Simple file list sidebar
+   - Clear indication of currently selected file
 
-4. **Enhanced Navigation**
-   - Persistent navigation sidebar for quick access to all files
-   - Breadcrumb navigation for directory structure
-   - Search functionality across all generated files
+4. **Technical Implementation**
+   - Lightweight state management
+   - Minimal API requirements
+   - Focus on performance and reliability
 
-5. **Technical Implementation**
-   - Single-page application architecture
-   - State management for multiple audio instances
-   - Efficient loading of file metadata and content
-   - Caching strategy for improved performance
+This simplified approach will provide the core multi-instance functionality while keeping the implementation straightforward. Additional features like comparative analysis, advanced filtering, and batch operations can be added in future iterations.
 
 ## 7. Next Steps and Action Items
 
@@ -355,13 +350,11 @@ tts-application/
   GET /list - List available files
   POST /upload - Upload a file
   GET /download/:id - Download a file
-  GET /metadata - Get metadata for all files
-  GET /search - Search across all files by content or metadata
+  GET /metadata - Get basic metadata for files
 
 /api/config
   GET / - Get current configuration
   POST / - Update configuration
-  GET /presets - Get available presets
 ```
 
 ### C. Technology Stack
