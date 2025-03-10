@@ -34,6 +34,7 @@ This document outlines the comprehensive plan for integrating the React-based fr
    - Transcript viewing with synchronized highlighting
    - Generated files browser
    - Metadata display (duration, word count, model, voice, creation date, file size)
+   - Multi-instance file management within a single viewer interface
 
 5. **User Interface**
    - Tab-based navigation between configuration and viewing sections
@@ -54,6 +55,7 @@ This document outlines the comprehensive plan for integrating the React-based fr
    - API for file upload and retrieval
    - Directory browsing functionality
    - File metadata access
+   - Consolidated file listing with metadata for multi-instance viewer
 
 4. **Output Handling**
    - Audio file generation and serving
@@ -99,6 +101,8 @@ This document outlines the comprehensive plan for integrating the React-based fr
      - Update `ai-provider-section.tsx` to fetch available voices from API
      - Enhance `output-settings-section.tsx` to save preferences
      - Revise `viewing-section.tsx` to display real-time processing status
+     - Create new `multi-file-viewer.tsx` component for managing multiple audio files
+     - Implement file selection and comparison features in the viewer
 
    - **Configuration**
      - Create `.env.local` for environment variables
@@ -143,6 +147,7 @@ This document outlines the comprehensive plan for integrating the React-based fr
    - Optimize performance
    - Refine user experience
    - Address edge cases
+   - Validate multi-instance viewer functionality with various file types and quantities
 
 4. **Phase 4: Deployment**
    - Build production version of front-end
@@ -259,7 +264,37 @@ The existing AI Text Processor can be leveraged in the front-end to provide enha
    - Allow customization of prompt parameters
    - Save user preferences for future sessions
 
-## 6. Next Steps and Action Items
+## 6. Multi-Instance Viewer Requirements
+
+The application will transition from generating individual HTML viewers for each audio file to a single, integrated multi-instance viewer within the main UI. This enhancement will provide the following capabilities:
+
+1. **Unified File Management**
+   - Display all generated audio files in a single interface
+   - Sort and filter files by various metadata (date, duration, voice, etc.)
+   - Batch operations for multiple files (delete, download, etc.)
+
+2. **Seamless File Switching**
+   - Switch between different audio files without leaving the viewer
+   - Maintain playback state when switching between files
+   - Queue multiple files for sequential playback
+
+3. **Comparative Analysis**
+   - Side-by-side comparison of different TTS outputs for the same text
+   - Compare metadata and generation parameters across files
+   - Track differences in processing options
+
+4. **Enhanced Navigation**
+   - Persistent navigation sidebar for quick access to all files
+   - Breadcrumb navigation for directory structure
+   - Search functionality across all generated files
+
+5. **Technical Implementation**
+   - Single-page application architecture
+   - State management for multiple audio instances
+   - Efficient loading of file metadata and content
+   - Caching strategy for improved performance
+
+## 7. Next Steps and Action Items
 
 1. **Immediate Actions**
    - Set up development environment for API development
@@ -281,7 +316,7 @@ The existing AI Text Processor can be leveraged in the front-end to provide enha
    - Update user documentation to include front-end features
    - Prepare deployment guide
 
-## 7. Appendix
+## 8. Appendix
 
 ### A. Front-End Component Structure
 
@@ -296,10 +331,10 @@ tts-application/
 │   ├── configuration-section.tsx
 │   ├── file-tree-context.tsx
 │   ├── file-tree.tsx
+│   ├── multi-file-viewer.tsx
 │   ├── output-settings-section.tsx
 │   ├── text-input-section.tsx
 │   ├── theme-provider.tsx
-│   ├── ui/
 │   └── viewing-section.tsx
 ├── hooks/
 ├── lib/
@@ -320,6 +355,8 @@ tts-application/
   GET /list - List available files
   POST /upload - Upload a file
   GET /download/:id - Download a file
+  GET /metadata - Get metadata for all files
+  GET /search - Search across all files by content or metadata
 
 /api/config
   GET / - Get current configuration
@@ -337,6 +374,6 @@ tts-application/
 
 ---
 
-*Document Version: 1.0*  
+*Document Version: 1.1*  
 *Last Updated: March 10, 2024*  
-*Author: Marco* 
+*Author: Marco*
