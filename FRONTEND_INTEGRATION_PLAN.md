@@ -375,7 +375,51 @@ To handle large audio files efficiently, the system will implement batch process
    - Progress indicators for ongoing jobs
    - History of completed jobs with results
 
-## 10. Next Steps and Action Items
+## 10. Project Structure and Development Approach
+
+To preserve the current production version while developing the integrated solution, we will adopt the following approach:
+
+1. **Repository Structure**
+   - Create a new project directory: `TTS-Integrated`
+   - Copy the core functionality from `Text_To_Speech`
+   - Maintain `AI-Text-Processor` as a separate module (already separate)
+   - Use Git submodules or package references to maintain connections
+
+2. **Development Workflow**
+   - Develop the web interface and API layer in the new project
+   - Make non-breaking enhancements to core TTS functionality
+   - Implement a compatibility layer for the CLI interface
+   - Use feature flags to enable/disable new functionality
+
+3. **Code Organization**
+   ```
+   SoftwareDev/
+   ├── Text_To_Speech/         # Original CLI version (preserved)
+   ├── AI-Text-Processor/      # Text processing module (shared)
+   └── TTS-Integrated/         # New integrated version
+       ├── backend/            # Python API server
+       │   ├── api/            # API endpoints
+       │   ├── core/           # Core TTS functionality (from Text_To_Speech)
+       │   └── cli/            # CLI compatibility layer
+       ├── frontend/           # React web application
+       └── docker/             # Docker configuration files
+   ```
+
+4. **Shared Code Management**
+   - Extract common functionality into shared modules
+   - Use versioning to track compatibility
+   - Document dependencies between components
+   - Create clear interfaces between modules
+
+5. **Migration Path**
+   - Provide tools to migrate settings and files from the original version
+   - Document the migration process for existing users
+   - Support both versions during the transition period
+   - Offer a rollback mechanism if needed
+
+This approach allows us to develop the new integrated solution without breaking the current production version. Once the new version is stable and thoroughly tested, users can choose to migrate to it while still having the option to use the original CLI version if needed.
+
+## 11. Next Steps and Action Items
 
 1. **Immediate Actions**
    - Set up development environment for API development
@@ -397,7 +441,7 @@ To handle large audio files efficiently, the system will implement batch process
    - Update user documentation to include front-end features
    - Prepare deployment guide
 
-## 11. Appendix
+## 12. Appendix
 
 ### A. Front-End Component Structure
 
@@ -482,6 +526,6 @@ volumes:
 
 ---
 
-*Document Version: 1.2*  
+*Document Version: 1.3*  
 *Last Updated: March 10, 2024*  
 *Author: Marco*
